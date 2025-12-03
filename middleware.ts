@@ -1,6 +1,6 @@
-import { Address } from 'viem'
 import { paymentMiddleware, Resource, Network } from 'x402-next'
 import { NextRequest } from 'next/server'
+import type { Address } from 'viem'
 
 /**
  * IMPORTANT: The receiver address MUST be a Solana WALLET address (system account),
@@ -74,15 +74,11 @@ export const middleware = (req: NextRequest) => {
 }
 
 // Configure which paths the middleware should run on
+// More specific matcher to reduce bundle size
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (metadata files)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    '/', // Include the root path explicitly
+    '/api/animals',
+    '/animals',
+    '/',
   ],
 }

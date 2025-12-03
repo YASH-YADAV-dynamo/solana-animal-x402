@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Externalize viem to reduce middleware bundle size
+  serverExternalPackages: ['viem'],
+  // Turbopack config (Next.js 16+)
+  turbopack: {},
 }
 
 export default nextConfig
