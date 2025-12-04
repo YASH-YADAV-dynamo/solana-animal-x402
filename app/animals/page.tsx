@@ -24,12 +24,27 @@ export default function AnimalsPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const nameParam = urlParams.get('name')
+    
+    // Check if we're on /api/animals (redirected from payment)
+    // This can happen after payment completion
+    if (window.location.pathname === '/api/animals') {
+      const apiParams = new URLSearchParams(window.location.search)
+      const apiName = apiParams.get('name')
+      if (apiName) {
+        // Redirect to /animals page which will then fetch the data
+        // This prevents blob URL issues
+        window.location.replace(`/animals?name=${encodeURIComponent(apiName)}`)
+        return
+      }
+    }
+    
     if (nameParam && !animal) {
       setName(nameParam)
-      // Try to fetch after a short delay (payment might have completed)
+      // If we're on /animals page after redirect, payment likely completed
+      // Try to fetch after a short delay to ensure payment session is established
       setTimeout(() => {
         fetchAnimal(nameParam, true)
-      }, 1000)
+      }, 1500)
     }
   }, [])
 
@@ -44,21 +59,38 @@ export default function AnimalsPage() {
     setError(null)
     try {
       const params = new URLSearchParams({ name: nameValue })
-      const response = await fetch(`/api/animals?${params.toString()}`, {
+      const apiUrl = `/api/animals?${params.toString()}`
+      console.log('Fetching from:', apiUrl)
+      
+      // Add format=json to ensure we always get JSON response, not a redirect
+      const jsonApiUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}format=json`
+      
+      const response = await fetch(jsonApiUrl, {
+        method: 'GET',
         credentials: 'include', // Important for cookies/sessions
         headers: {
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
+        // Prevent automatic blob/download handling
+        cache: 'no-store',
       })
+      
+      console.log('Response status:', response.status, response.statusText)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
       
       if (!response.ok) {
         if (response.status === 402) {
           // Payment required - the x402 middleware should handle this
           // But if we're here from a redirect, the widget should have appeared
           if (!isRetry) {
-            // Direct navigation to trigger x402 widget
+            // Instead of navigating directly, open payment in a way that allows us to come back
             // The middleware will intercept and show payment UI
-            window.location.href = `/api/animals?${params.toString()}`
+            // After payment, the user will be redirected back, and we'll retry
+            const paymentUrl = new URL(apiUrl, window.location.origin)
+            // Remove format=json temporarily to allow payment flow
+            paymentUrl.searchParams.delete('format')
+            window.location.href = paymentUrl.toString()
             return
           } else {
             // If we get 402 again after redirect, payment might have failed
@@ -77,13 +109,30 @@ export default function AnimalsPage() {
         }
       }
       
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('Response is not JSON. Content-Type:', contentType, 'Body:', text)
+        setError(`Unexpected response format. Expected JSON but got ${contentType || 'unknown'}. Check console for details.`)
+        setLoading(false)
+        return
+      }
+      
       const data: AnimalResponse = await response.json()
+      console.log('Successfully fetched animal data:', data)
       setAnimal(data)
       setShowInput(false)
       setError(null)
     } catch (err) {
       console.error('Fetch error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch animal. Check console for details.')
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('Network error: Failed to connect to server. Make sure the API is accessible.')
+      } else if (err instanceof SyntaxError) {
+        setError('Invalid JSON response from server. Check console for details.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch animal. Check console for details.')
+      }
     } finally {
       setLoading(false)
     }

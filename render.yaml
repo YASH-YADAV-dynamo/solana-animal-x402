@@ -7,6 +7,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # PORT is automatically set by Render, but Next.js will use it automatically
+      # If you need a specific port, uncomment and set it:
+      # - key: PORT
+      #   value: 1000
       - key: NEXT_PUBLIC_RECEIVER_ADDRESS
         sync: false
       - key: NEXT_PUBLIC_WALLET_ADDRESS
