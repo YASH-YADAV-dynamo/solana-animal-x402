@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: solana-x402
+    env: node
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_RECEIVER_ADDRESS
+        sync: false
+      - key: NEXT_PUBLIC_WALLET_ADDRESS
+        sync: false
+      - key: NEXT_PUBLIC_FACILITATOR_URL
+        value: https://x402.org/facilitator
+      - key: NEXT_PUBLIC_CDP_CLIENT_KEY
+        sync: false
+    plan: starter
+    region: oregon
+    healthCheckPath: /
+

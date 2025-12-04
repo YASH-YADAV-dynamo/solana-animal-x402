@@ -9,10 +9,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Externalize viem to reduce middleware bundle size
   serverExternalPackages: ['viem'],
-  // Turbopack config (Next.js 16+)
   turbopack: {},
+  experimental: {
+    optimizePackageImports: ['x402-next'],
+  },
 }
 
-export default nextConfig
+// Bundle analyzer - enabled by default when using --webpack flag
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+module.exports = withBundleAnalyzer(nextConfig)

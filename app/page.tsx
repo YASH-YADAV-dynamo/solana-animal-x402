@@ -4,12 +4,12 @@ export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
       <main className="flex min-h-screen w-full flex-col items-center justify-center gap-8">
-        <Link
+            <Link
           href="/animals"
           className="px-16 py-8 bg-black text-white hover:bg-white hover:text-black border-4 border-black transition-all font-bold text-xl"
-        >
+            >
           LET'S GO
-        </Link>
+            </Link>
         <div className="flex items-center gap-2 text-xs text-black">
           <span>Powered by</span>
           <svg width="16" height="16" viewBox="0 0 397 312" fill="none" xmlns="http://www.w3.org/2000/svg">
